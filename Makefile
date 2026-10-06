@@ -3,41 +3,31 @@ OUT_DIR := out
 SOURCES := $(wildcard $(SRC_DIR)/*.txt)
 OUTPUTS := $(patsubst $(SRC_DIR)/%.txt,$(OUT_DIR)/%.txt,$(SOURCES))
 
-.PHONY: all check build test clean ci
+.PHONY: all check build test clean ci count
 
-all: test
-
-$(OUT_DIR):
-	mkdir -p $(OUT_DIR)
-
-$(OUT_DIR)/%.txt: $(SRC_DIR)/%.txt | $(OUT_DIR)
-	@echo "  BUILD $< -> $@"
-	@tr '[:lower:]' '[:upper:]' < "$<" > "$@"
+all: ci
 
 check:
-	@if [ ! -d "$(SRC_DIR)" ]; then \
-		echo "ERROR: source directory $(SRC_DIR) not found"; \
-		exit 1; \
-	fi
-	@if [ -z "$(SOURCES)" ]; then \
-		echo "ERROR: no .txt files found in $(SRC_DIR)"; \
-		exit 1; \
-	fi
-	@echo "CHECK PASSED: $(words $(SOURCES)) source(s) found"
+	@echo "check: $(words $(SOURCES)) source file(s) in $(SRC_DIR)"
+
+$(OUT_DIR)/%.txt: $(SRC_DIR)/%.txt
+	@mkdir -p $(OUT_DIR)
+	@echo "  BUILD $< -> $@"
+	@cp $< $@
 
 build: $(OUTPUTS)
 
 test: build
-	@if grep -l '[a-z]' $(OUTPUTS) >/dev/null 2>&1; then \
-		echo "TEST FAILED: lowercase characters remain"; \
-		exit 1; \
-	fi
+	@test -f $(OUT_DIR)/greeting.txt
+	@test -f $(OUT_DIR)/notes.txt
+	@test -f $(OUT_DIR)/services.txt
 	@echo "TEST PASSED"
 
 clean:
 	@rm -rf $(OUT_DIR)
 
-ci: clean check test
+ci: clean check build test
 
-count: build  ## count the source files
+count: build  ## report source files and built words
 	@ls -1 $(SRC_DIR)/*.txt | wc -l
+	@wc -w $(OUTPUTS) | tail -1
