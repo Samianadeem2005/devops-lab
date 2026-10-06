@@ -1,0 +1,8 @@
+make rebuilds only what changed
+timestamps decide, not contents
+phony targets always run
+order-only prerequisites use a pipe
+a new line
+timing change 1
+timing change 2
+timing change 3
